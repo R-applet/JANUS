@@ -119,7 +119,7 @@ class JANUS:
 
         init_fitness = []
         for smi in init_smiles:
-            init_fitness.append(self.fitness_function(smi,init_pareto,self.props_storage[smi]))
+            init_fitness.append(self.fitness_function(smi,self.init_pareto,self.props_storage[smi]))
 
         # sort the initial population and save in class
         idx = np.argsort(init_fitness)[::-1]
