@@ -69,7 +69,7 @@ class JANUS:
         self.exploit_num_random_samples = exploit_num_random_samples
         self.exploit_num_mutations = exploit_num_mutations
         self.top_mols = top_mols
-        self.prop_path = prop_paths
+        self.prop_path = prop_path
         self.init_props_file = init_props_file
         self.prop_scaler_path = prop_scaler_path
 
