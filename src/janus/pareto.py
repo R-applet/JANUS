@@ -21,8 +21,7 @@ def make_preds(smi: str, model_path: str, scale_path: str):
 
     f_feat = open('tmp/feats_tmp.csv','w')
     f_feat.write('s1,s2,s3,s4,s5,s6,s7 \n')
-    f_feat.write('1,0,0,0,0,0,0 \n0,1,0,0,0,0,0 \n0,0,1,0,0,0,0 \n0,0,0,1,0,0,0 \n0,0,0,0,1,0,0 \n0,0,0,0,0,1,0 \n0,0,0,0
-,0,0,1')
+    f_feat.write('1,0,0,0,0,0,0 \n0,1,0,0,0,0,0 \n0,0,1,0,0,0,0 \n0,0,0,1,0,0,0 \n0,0,0,0,1,0,0 \n0,0,0,0,0,1,0 \n0,0,0,0,0,0,1')
     f_feat.close()
 
     arguments = [
