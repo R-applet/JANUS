@@ -13,7 +13,7 @@ from .mutate import mutate_smiles
 from .network import create_and_train_network, obtain_model_pred
 from .utils import sanitize_smiles, get_fp_scores
 from .fragment import form_fragments
-
+from .pareto import make_preds, check_new_point, euclidean_distance, distance_to_pareto_front, dominates, identify_pareto_front
 
 class JANUS:
     """ JANUS class for genetic algorithm applied on SELFIES
@@ -42,7 +42,10 @@ class JANUS:
         crossover_num_random_samples: Optional[int] = 1,
         exploit_num_random_samples: Optional[int] = 400,
         exploit_num_mutations: Optional[int] = 400,
-        top_mols: Optional[int] = 1
+        top_mols: Optional[int] = 1,
+        prop_path: Optional[str] = None,
+        prop_scaler_path: Optional[str] = None,
+        init_props_file: Optional[str] = None
     ):
 
         # set all class variables
@@ -66,6 +69,9 @@ class JANUS:
         self.exploit_num_random_samples = exploit_num_random_samples
         self.exploit_num_mutations = exploit_num_mutations
         self.top_mols = top_mols
+        self.prop_path = prop_paths
+        self.init_props_file = init_props_file
+        self.prop_scaler_path = prop_scaler_path
 
         # create dump folder
         if not os.path.isdir(f"./{self.work_dir}"):
@@ -101,9 +107,19 @@ class JANUS:
         # get initial fitness
         # with multiprocessing.Pool(self.num_workers) as pool:
         #     init_fitness = pool.map(self.fitness_function, init_smiles)
+        prop_data = pd.read_csv(init_props_file)
+        init_props = []
+        for i in range(len(prop_data)):
+            init_props.append((-prop_data['mpC'][i],prop_data['Tdec'][i]))
+        self.init_pareto = = identify_pareto_front(init_props)
+        
+        self.props_storage = {}
+        for j,smi in enumerate(init_smiles):
+            self.props_storage[smi] = init_props[j]
+
         init_fitness = []
         for smi in init_smiles:
-            init_fitness.append(self.fitness_function(smi))
+            init_fitness.append(self.fitness_function(smi,init_pareto,self.props_storage[smi]))
 
         # sort the initial population and save in class
         idx = np.argsort(init_fitness)[::-1]
@@ -255,18 +271,31 @@ class JANUS:
                 replaced_pop = np.array(explr_smiles)[
                     sorted_idx[: self.generation_size - len(keep_smiles)]
                 ].tolist()
-
+            
             # Calculate actual fitness for the exploration population
+            if gen_ == 0:
+                new_pareto = self.init_pareto
+            else:
+                new_pareto = identify_pareto_front(list(self.props_storage.values()))
+
             self.population = keep_smiles + replaced_pop
-            self.fitness = []
             for smi in self.population:
+                if smi not in self.props_storage:
+                    # collect property predictions for new molecules
+                    p = make_preds(smi,prop_path,prop_scaler_path)
+                    self.props_storage[smi] = (-p[0],p[1])
+
+            self.fitness = []
+            for smi in self.population:                    
                 if smi in self.smiles_collector:
-                    # if already calculated, use the value from smiles collector
-                    self.fitness.append(self.smiles_collector[smi][0])
+                    # always recalculate fitness with updated pareto front, count number of repeats
+                    f = self.fitness_function(smi,new_pareto,self.props_storage[smi])
+                    self.fitness.append(f)
+                    #self.fitness.append(self.smiles_collector[smi][0])
                     self.smiles_collector[smi][1] += 1
                 else:
                     # make a calculation
-                    f = self.fitness_function(smi)
+                    f = self.fitness_function(smi,new_pareto,self.props_storage[smi])
                     self.fitness.append(f)
                     self.smiles_collector[smi] = [f, 1]
 
@@ -336,10 +365,16 @@ class JANUS:
             ]  # list of smiles with highest fp scores
 
             # STEP 4: CALCULATE THE FITNESS FOR THE LOCAL SEARCH:
+            for smi in self.population_loc:
+                if smi not in self.props_storage:
+                    # collect property predictions for new molecules
+                    p = make_preds(smi,prop_path,prop_scaler_path)
+                    self.props_storage[smi] = (-p[0],p[1])
+
             # Exploitation data generated from similarity search is measured with fitness function
             self.fitness_loc = []
             for smi in self.population_loc:
-                f = self.fitness_function(smi)
+                f = self.fitness_function(smi,new_pareto,,self.props_storage[smi])
                 self.fitness_loc.append(f)
                 self.smiles_collector[smi] = [f, 1]
 
