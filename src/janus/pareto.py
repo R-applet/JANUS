@@ -4,6 +4,7 @@ import numpy as np
 from rdkit.Chem import *
 from rdkit import Chem, RDLogger
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
+import pickle
 
 def make_preds(smi: str, model_path: str, scale_path: str):
     scale_dict = pickle.load(open(scale_path,'rb'))
