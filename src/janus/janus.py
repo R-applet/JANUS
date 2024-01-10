@@ -111,7 +111,7 @@ class JANUS:
         init_props = []
         for i in range(len(prop_data)):
             init_props.append((-prop_data['mpC'][i],prop_data['Tdec'][i]))
-        self.init_pareto = = identify_pareto_front(init_props)
+        self.init_pareto  = identify_pareto_front(init_props)
         
         self.props_storage = {}
         for j,smi in enumerate(init_smiles):
