@@ -78,3 +78,17 @@ def identify_pareto_front(points):
         if all(not dominates(other, point) for j, other in enumerate(points) if i != j):
             pareto_front.append(point)
     return pareto_front
+
+def record_data(smi: str, props: list):
+    add_line = smi
+    for p in props:
+        add_line+=f',{p}'
+    exists = os.path.exists('master.txt')
+    if not exists:
+        f = open('master.txt','a')
+        f.write('smiles,mpC,Tdec,denisty_exp,denisty_calc,hof_calc,logh50,logE50\n')
+        f.close()
+
+    f = open('master.txt','a')
+    f.write(add_line+'\n')
+    f.close()
