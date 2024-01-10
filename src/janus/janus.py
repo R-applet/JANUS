@@ -374,7 +374,7 @@ class JANUS:
             # Exploitation data generated from similarity search is measured with fitness function
             self.fitness_loc = []
             for smi in self.population_loc:
-                f = self.fitness_function(smi,new_pareto,,self.props_storage[smi])
+                f = self.fitness_function(smi,new_pareto,self.props_storage[smi])
                 self.fitness_loc.append(f)
                 self.smiles_collector[smi] = [f, 1]
 
