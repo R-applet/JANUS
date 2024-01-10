@@ -5,7 +5,7 @@ import yaml
 from functools import partial
 from collections import OrderedDict
 from typing import Callable, List, Optional
-
+import pandas as pd
 import numpy as np
 
 from .crossover import crossover_smiles
