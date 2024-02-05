@@ -109,6 +109,7 @@ class JANUS:
         # get initial fitness
         # with multiprocessing.Pool(self.num_workers) as pool:
         #     init_fitness = pool.map(self.fitness_function, init_smiles)
+       
         prop_data = pd.read_csv(init_props_file)
         init_props = []
         for i in range(len(prop_data)):
@@ -116,6 +117,8 @@ class JANUS:
         self.init_pareto  = find_pareto_front(init_props)
         self.init_pareto_fit = fit_curve_to_points(self.init_pareto)
         
+        self.pareto_dict = {}
+
         self.props_storage = {}
         for j,smi in enumerate(init_smiles):
             self.props_storage[smi] = init_props[j]
@@ -281,6 +284,7 @@ class JANUS:
             else:
                 new_pareto = find_pareto_front(list(self.props_storage.values()))
             new_pareto_fit = fit_curves_to_points(new_pareto)
+            self.pareto_dict[gen_] = [new_pareto, new_pareto_fit]
             self.population = keep_smiles + replaced_pop
             for smi in self.population:
                 if smi not in self.props_storage:
@@ -453,6 +457,9 @@ class JANUS:
                 f.writelines(
                     f"Gen:{gen_}, {self.population[fit_all_best]}, {self.fitness[fit_all_best]} \n"
                 )
+
+        with open('pareto.pkl', 'wb') as outfile:
+            pickle.dump(self.pareto_dict, outfile)    
 
         return
 
