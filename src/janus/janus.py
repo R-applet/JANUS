@@ -13,7 +13,7 @@ from .mutate import mutate_smiles
 from .network import create_and_train_network, obtain_model_pred
 from .utils import sanitize_smiles, get_fp_scores
 from .fragment import form_fragments
-from .pareto import make_preds, check_new_point, euclidean_distance, distance_to_pareto_front, dominates, identify_pareto_front
+from .pareto import make_preds, check_new_point, euclidean_distance, distance_to_pareto_front, find_pareto_front, fit_curve_to_points
 
 class JANUS:
     """ JANUS class for genetic algorithm applied on SELFIES
@@ -45,7 +45,8 @@ class JANUS:
         top_mols: Optional[int] = 1,
         prop_path: Optional[str] = None,
         prop_scaler_path: Optional[str] = None,
-        init_props_file: Optional[str] = None
+        init_props_file: Optional[str] = None,
+        prop_names: Optional[List[str]] = None
     ):
 
         # set all class variables
@@ -72,6 +73,7 @@ class JANUS:
         self.prop_path = prop_path
         self.init_props_file = init_props_file
         self.prop_scaler_path = prop_scaler_path
+        self.prop_names = prop_names
 
         # create dump folder
         if not os.path.isdir(f"./{self.work_dir}"):
@@ -110,8 +112,9 @@ class JANUS:
         prop_data = pd.read_csv(init_props_file)
         init_props = []
         for i in range(len(prop_data)):
-            init_props.append((-prop_data['mpC'][i],prop_data['Tdec'][i]))
-        self.init_pareto  = identify_pareto_front(init_props)
+            init_props.append((prop_data[prop_names[0]][i],prop_data[prop_names[1]][i]))
+        self.init_pareto  = find_pareto_front(init_props)
+        self.init_pareto_fit = fit_curve_to_points(self.init_pareto)
         
         self.props_storage = {}
         for j,smi in enumerate(init_smiles):
@@ -119,7 +122,7 @@ class JANUS:
 
         init_fitness = []
         for smi in init_smiles:
-            init_fitness.append(self.fitness_function(smi,self.init_pareto,self.props_storage[smi]))
+            init_fitness.append(self.fitness_function(smi,self.init_pareto_fit,self.props_storage[smi]))
 
         # sort the initial population and save in class
         idx = np.argsort(init_fitness)[::-1]
@@ -276,8 +279,8 @@ class JANUS:
             if gen_ == 0:
                 new_pareto = self.init_pareto
             else:
-                new_pareto = identify_pareto_front(list(self.props_storage.values()))
-
+                new_pareto = find_pareto_front(list(self.props_storage.values()))
+            new_pareto_fit = fit_curves_to_points(new_pareto)
             self.population = keep_smiles + replaced_pop
             for smi in self.population:
                 if smi not in self.props_storage:
@@ -289,13 +292,13 @@ class JANUS:
             for smi in self.population:                    
                 if smi in self.smiles_collector:
                     # always recalculate fitness with updated pareto front, count number of repeats
-                    f = self.fitness_function(smi,new_pareto,self.props_storage[smi])
+                    f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi])
                     self.fitness.append(f)
                     #self.fitness.append(self.smiles_collector[smi][0])
                     self.smiles_collector[smi][1] += 1
                 else:
-                    # make a calculation
-                    f = self.fitness_function(smi,new_pareto,self.props_storage[smi])
+                    # make a new calculation
+                    f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi])
                     self.fitness.append(f)
                     self.smiles_collector[smi] = [f, 1]
 
@@ -374,7 +377,7 @@ class JANUS:
             # Exploitation data generated from similarity search is measured with fitness function
             self.fitness_loc = []
             for smi in self.population_loc:
-                f = self.fitness_function(smi,new_pareto,self.props_storage[smi])
+                f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi])
                 self.fitness_loc.append(f)
                 self.smiles_collector[smi] = [f, 1]
 

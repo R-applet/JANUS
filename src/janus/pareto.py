@@ -4,6 +4,7 @@ import numpy as np
 from rdkit.Chem import *
 from rdkit import Chem, RDLogger
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
+from scipy.interpolate import Akima1DInterpolator
 import pickle
 import os
 
@@ -50,34 +51,60 @@ def make_preds(smi: str, model_path: str, scale_path: str):
     return p
 
 def check_new_point(new_point, pareto_front):
-    tmp = []
+    dominated = False
     for point in pareto_front:
-        tmp.append(dominates(point,new_point))
-    return all(not t for t in tmp)
+        if (point[0] < new_point[0] and point[1] > new_point[1]):
+            dominated = True
+            break
+    return dominated
         
-
 def euclidean_distance(point1, point2):
     return np.sqrt(sum((p1 - p2)**2 for p1, p2 in zip(point1, point2)))
 
-def distance_to_pareto_front(new_point, pareto_front):
+def distance_to_pareto_front(new_point, pareto_fit):
     # Calculate the distance from the new point to each point in the Pareto front
     distances = [euclidean_distance(new_point, point) for point in pareto_front]
     min_dist = min(distances)
     # Return the minimum distance
-    if not check_new_point(new_point, pareto_front):
+    if check_new_point(new_point, pareto_fit):
         min_dist = -min_dist
     return min_dist
 
-def dominates(point1, point2):
-    # Check if point1 dominates point2
-    return all(p1 >= p2 for p1, p2 in zip(point1, point2)) and any(p1 > p2 for p1, p2 in zip(point1, point2))
-
-def identify_pareto_front(points):
+def find_pareto_front(costs):
     pareto_front = []
-    for i, point in enumerate(points):
-        if all(not dominates(other, point) for j, other in enumerate(points) if i != j):
-            pareto_front.append(point)
-    return pareto_front
+    for i, c in enumerate(costs):
+        # Check if point 'c' is dominated by any other point
+        dominated = False
+        for other in costs:
+            if (other[0] < c[0] and other[1] > c[1]):  # other is better in both objectives
+                dominated = True
+                break
+        if not dominated:
+            pareto_front.append(c)
+    return np.array(pareto_front)
+
+
+def fit_curve_to_points(points):
+    # Sort the points based on x-values
+    sorted_points = sorted(points, key=lambda point: point[0])
+    
+    x_data, y_data = zip(*sorted_points)
+    
+    # Convert to numpy arrays
+    x_data = np.array(x_data)
+    y_data = np.array(y_data)
+    
+    x_fit = np.linspace(min(x_data), max(x_data), 5000)
+
+    
+    # Fit the curve using Akima 
+    fitter = Akima1DInterpolator(x_data, y_data)
+    y_fit = fitter.__call__(x_fit)
+    
+    pf_data = []
+    for i in range(len(x_fit)):
+        pf_data.append((x_fit[i],y_fit[i]))
+    return pf_data
 
 def record_data(smi: str, props: list):
     add_line = smi
@@ -86,7 +113,7 @@ def record_data(smi: str, props: list):
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
-        f.write('smiles,mpC,Tdec,denisty_exp,denisty_calc,hof_calc,logh50,logE50\n')
+        f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50)\n')
         f.close()
 
     f = open('master.txt','a')
