@@ -68,7 +68,7 @@ def distance_to_pareto_front(new_point, pareto_fit):
     # Return the minimum distance
     if check_new_point(new_point, pareto_fit):
         min_dist = -min_dist
-    return min_dist
+    return np.around(min_dist, decimals=1)
 
 def find_pareto_front(costs):
     pareto_front = []
@@ -94,7 +94,7 @@ def fit_curve_to_points(points):
     x_data = np.array(x_data)
     y_data = np.array(y_data)
     
-    x_fit = np.linspace(min(x_data), max(x_data), 5000)
+    x_fit = np.linspace(min(x_data), max(x_data), 20000)
 
     
     # Fit the curve using Akima 
