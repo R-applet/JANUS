@@ -63,7 +63,7 @@ def euclidean_distance(point1, point2):
 
 def distance_to_pareto_front(new_point, pareto_fit):
     # Calculate the distance from the new point to each point in the Pareto front
-    distances = [euclidean_distance(new_point, point) for point in pareto_front]
+    distances = [euclidean_distance(new_point, point) for point in pareto_fit]
     min_dist = min(distances)
     # Return the minimum distance
     if check_new_point(new_point, pareto_fit):
