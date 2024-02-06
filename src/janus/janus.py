@@ -460,6 +460,9 @@ class JANUS:
                     f"Gen:{gen_}, {self.population[fit_all_best]}, {self.fitness[fit_all_best]} \n"
                 )  
 
+        with open('property_storage.pkl', 'wb') as file:
+                pickle.dump(self.props_storage, file)
+        
         return
 
     @staticmethod
