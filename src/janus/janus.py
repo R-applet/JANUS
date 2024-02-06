@@ -292,7 +292,7 @@ class JANUS:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
                     p = make_preds(smi,self.prop_path,self.prop_scaler_path)
-                    self.props_storage[smi] = (-p[0],p[1])
+                    self.props_storage[smi] = (p[0],p[1])
 
             self.fitness = []
             for smi in self.population:                    
@@ -378,7 +378,7 @@ class JANUS:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
                     p = make_preds(smi,self.prop_path,self.prop_scaler_path)
-                    self.props_storage[smi] = (-p[0],p[1])
+                    self.props_storage[smi] = (p[0],p[1])
 
             # Exploitation data generated from similarity search is measured with fitness function
             self.fitness_loc = []
