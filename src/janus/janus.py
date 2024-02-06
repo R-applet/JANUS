@@ -283,7 +283,7 @@ class JANUS:
                 new_pareto = self.init_pareto
             else:
                 new_pareto = find_pareto_front(list(self.props_storage.values()))
-            new_pareto_fit = fit_curves_to_points(new_pareto)
+            new_pareto_fit = fit_curve_to_points(new_pareto)
             self.pareto_dict[gen_] = [new_pareto, new_pareto_fit]
             self.population = keep_smiles + replaced_pop
             for smi in self.population:
