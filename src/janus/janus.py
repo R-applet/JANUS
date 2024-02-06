@@ -7,7 +7,7 @@ from collections import OrderedDict
 from typing import Callable, List, Optional
 import pandas as pd
 import numpy as np
-
+import pickle
 from .crossover import crossover_smiles
 from .mutate import mutate_smiles
 from .network import create_and_train_network, obtain_model_pred
