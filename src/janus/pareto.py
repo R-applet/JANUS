@@ -4,7 +4,7 @@ import numpy as np
 from rdkit.Chem import *
 from rdkit import Chem, RDLogger
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
-from scipy.interpolate import Akima1DInterpolator
+from scipy.interpolate import interp1d
 import pickle
 import os
 
@@ -97,14 +97,14 @@ def fit_curve_to_points(points):
     x_fit = np.linspace(min(x_data), max(x_data), 20000)
 
     
-    # Fit the curve using Akima 
-    fitter = Akima1DInterpolator(x_data, y_data)
-    y_fit = fitter.__call__(x_fit)
+    # Fit the curve using interp1D
+    fitter = interp1d(x_data, y_data)
+    y_fit = fitter(x_fit)
     
     pf_data = []
     for i in range(len(x_fit)):
-        pf_data.append((x_fit[i],y_fit[i]))
-    return pf_data
+        pf_data.append([x_fit[i],y_fit[i]])
+    return np.array(pf_data)
 
 def record_data(smi: str, props: list):
     add_line = smi
