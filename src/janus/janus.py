@@ -13,7 +13,7 @@ from .mutate import mutate_smiles
 from .network import create_and_train_network, obtain_model_pred
 from .utils import sanitize_smiles, get_fp_scores
 from .fragment import form_fragments
-from .pareto import make_preds, check_new_point, euclidean_distance, distance_to_pareto_front, find_pareto_front, fit_curve_to_points
+from .pareto import make_preds, check_new_point, euclidean_distance, distance_to_pareto_front, find_pareto_front, fit_curve_to_points, fit_step
 
 class JANUS:
     """ JANUS class for genetic algorithm applied on SELFIES
@@ -115,7 +115,7 @@ class JANUS:
         for i in range(len(prop_data)):
             init_props.append((prop_data[prop_names[0]][i],prop_data[prop_names[1]][i]))
         self.init_pareto  = find_pareto_front(init_props)
-        self.init_pareto_fit = fit_curve_to_points(self.init_pareto)
+        self.init_pareto_fit = fit_step(self.init_pareto, 1000)
  
         self.props_storage = {}
         for j,smi in enumerate(init_smiles):
@@ -281,7 +281,7 @@ class JANUS:
                 new_pareto = self.init_pareto
             else:
                 new_pareto = find_pareto_front(list(self.props_storage.values()))
-            new_pareto_fit = fit_curve_to_points(new_pareto)
+            new_pareto_fit = fit_step(new_pareto,1000)
             pareto_dict = {}
             pareto_dict['pareto_points'] = new_pareto
             pareto_dict['pareto_curve'] = new_pareto_fit
