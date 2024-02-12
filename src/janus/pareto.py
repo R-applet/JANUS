@@ -8,7 +8,7 @@ from scipy.interpolate import interp1d
 import pickle
 import os
 
-def make_preds(smi: str, model_path: str, scale_path: str):
+def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
     scale_dict = pickle.load(open(scale_path,'rb'))
     nprops = len(scale_dict.keys())
 
@@ -46,7 +46,7 @@ def make_preds(smi: str, model_path: str, scale_path: str):
         p.append(list(scale_dict.values())[i].inverse_transform(df_pred['val'][i].reshape(-1,1))[0][0])
 
     os.system('rm -r tmp')
-    record_data(smi, p)
+    record_data(smi, p, gen)
 
     return p
 
@@ -133,16 +133,16 @@ def fit_step(points, density):
     segments.append(xy_right)        
     return np.vstack(segments)
 
-def record_data(smi: str, props: list):
+def record_data(smi: str, props: list, gen: int):
     add_line = smi
     for p in props:
         add_line+=f',{p}'
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
-        f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50)\n')
+        f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50),generation\n')
         f.close()
 
     f = open('master.txt','a')
-    f.write(add_line+'\n')
+    f.write(add_line+f',{gen}\n')
     f.close()

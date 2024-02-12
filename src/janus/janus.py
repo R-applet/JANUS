@@ -291,7 +291,7 @@ class JANUS:
             for smi in self.population:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
-                    p = make_preds(smi,self.prop_path,self.prop_scaler_path)
+                    p = make_preds(smi,self.prop_path,self.prop_scaler_path,gen_+1)
                     self.props_storage[smi] = (p[0],p[1])
 
             self.fitness = []
