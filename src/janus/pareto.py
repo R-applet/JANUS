@@ -107,28 +107,29 @@ def fit_curve_to_points(points):
     return np.array(pf_data)
 
 def fit_step(points, density):
+    sorted_points = np.sort(points,axis=0)
     segments = []
     for i in range(len(points)):
         
         if i == 0:
-            x_up = np.linspace(points[i][0],points[i][0],density)
-            y_up = np.linspace(0,points[i][1],density)
-            x_right = np.linspace(points[i][0],points[i+1][0],density)
-            y_right = np.linspace(points[i][1],points[i][1],density)
+            x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+            y_up = np.linspace(0,sorted_points[i][1],density)
+            x_right = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
+            y_right = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
 
         else:
-            x_up = np.linspace(points[i][0],points[i][0],density)
-            y_up = np.linspace(points[i-1][1],points[i][1],density)
-            x_right = np.linspace(points[i-1][0],points[i][0],density)
-            y_right = np.linspace(points[i-1][1],points[i-1][1],density)
+            x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+            y_up = np.linspace(sorted_points[i-1][1],sorted_points[i][1],density)
+            x_right = np.linspace(sorted_points[i-1][0],sorted_points[i][0],density)
+            y_right = np.linspace(sorted_points[i-1][1],sorted_points[i-1][1],density)
 
         xy_up = np.vstack([x_up,y_up]).T
         xy_right = np.vstack([x_right,y_right]).T
         segments.append(xy_up)
         segments.append(xy_right)
 
-    x_right = np.linspace(points[-1][0],500,density)
-    y_right = np.linspace(points[-1][1],points[-1][1],density)
+    x_right = np.linspace(sorted_points[-1][0],500,density)
+    y_right = np.linspace(sorted_points[-1][1],sorted_points[-1][1],density)
     xy_right = np.vstack([x_right,y_right]).T
     segments.append(xy_right)        
     return np.vstack(segments)
