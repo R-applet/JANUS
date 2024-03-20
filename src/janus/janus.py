@@ -116,7 +116,7 @@ class JANUS:
         init_props = []
         for i in range(len(prop_data)):
             init_props.append((prop_data[prop_names[0]][i],prop_data[prop_names[1]][i]))
-        self.init_pareto  = find_pareto_front(init_props)
+        self.init_pareto  = find_pareto_front(init_props,self.optimization_problem)
         self.init_pareto_fit = fit_step(self.init_pareto, 1000, self.optimization_problem)
  
         self.props_storage = {}
@@ -282,7 +282,7 @@ class JANUS:
             if gen_ == 0:
                 new_pareto = self.init_pareto
             else:
-                new_pareto = find_pareto_front(list(self.props_storage.values()))
+                new_pareto = find_pareto_front(list(self.props_storage.values()),self.optimization_problem)
             new_pareto_fit = fit_step(new_pareto,1000,self.optimization_problem)
             pareto_dict = {}
             pareto_dict['pareto_points'] = new_pareto
