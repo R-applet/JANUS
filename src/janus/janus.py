@@ -383,8 +383,12 @@ class JANUS:
             for smi in self.population_loc:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
-                    p = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
-                    self.props_storage[smi] = (p[0],p[1])
+                    master_data = pd.read_csv('master.txt')
+                    tmp = master_data[master_data['smiles']==smi]
+                    p1, p2 = tmp[prop_names[0]][0],tmp[prop_names[1]][0]
+                    self.props_storage[smi] = (p1,p2)
+                    #p = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
+                    #self.props_storage[smi] = (p[0],p[1])
 
             # Exploitation data generated from similarity search is measured with fitness function
             self.fitness_loc = []
