@@ -31,7 +31,6 @@ def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
         '--test_path', 'tmp/smi_tmp.txt',
         '--features_path', 'tmp/feats_tmp.csv',
         '--no_features_scaling',
-        '--ensemble_variance',
         '--preds_path', 'tmp/pred_tmp.csv',
         '--checkpoint_dir', model_path
     ]
