@@ -63,7 +63,7 @@ def collect_ensemble(smi: str, model_paths: str, scale_paths: str, gen: int):
         p_std.append(np.std(ps_array[:,j])
     
     record_data(smi, p_means, p_std, gen)
-    return p_means
+    return p_means,p_std
 
 def check_new_point(new_point, pareto_front):
     dominated = False
@@ -278,7 +278,11 @@ def record_data(smi: str, props: list, stds: list, gen: int):
         f = open('master.txt','a')
         f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50),mpC_std,Tdec_std,density_exp_std,density_calc_std,hof_calc_std,log(h50)_std,log(E50)_std,generation\n')
         f.close()
-
-    f = open('master.txt','a')
-    f.write(add_line+f',{gen}\n')
-    f.close()
+    else:
+        master = pd.read_csv('master.txt')
+        if smi in master['smiles'].to_list():
+            pass
+        else:
+            f = open('master.txt','a')
+            f.write(add_line+f',{gen}\n')
+            f.close()

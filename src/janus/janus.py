@@ -13,7 +13,7 @@ from .mutate import mutate_smiles
 from .network import create_and_train_network, obtain_model_pred
 from .utils import sanitize_smiles, get_fp_scores
 from .fragment import form_fragments
-from .pareto import make_preds, check_new_point, euclidean_distance, distance_to_pareto_front, find_pareto_front, fit_curve_to_points, fit_step
+from .pareto import make_preds, collect_ensemble, check_new_point, euclidean_distance, distance_to_pareto_front, find_pareto_front, fit_curve_to_points, fit_step
 
 class JANUS:
     """ JANUS class for genetic algorithm applied on SELFIES
@@ -185,9 +185,9 @@ class JANUS:
         cross_smi = self.flatten_list(cross_smi)
         return cross_smi
 
-    def check_filters(self, smi_list: List[str]):
+    def check_filters(self, smi_list: List[str], model_paths: str, scale_paths: str, gen: int):
         if self.custom_filter is not None:
-            smi_list = [smi for smi in smi_list if self.custom_filter(smi)]
+            smi_list = [smi for smi in smi_list if self.custom_filter(smi, model_paths, scale_paths, gen)]
         return smi_list
 
     def save_hyperparameters(self):
@@ -225,14 +225,14 @@ class JANUS:
                 mut_smi_explr = self.mutate_smi_list(
                     replace_smiles[0 : len(replace_smiles) // 2], space="explore"
                 )
-                mut_smi_explr = self.check_filters(mut_smi_explr)
+                mut_smi_explr = self.check_filters(mut_smi_explr, self.prop_path, self.prop_scaler_path, gen_)
 
                 # Crossovers:
                 smiles_join = []
                 for item in replace_smiles[len(replace_smiles) // 2 :]:
                     smiles_join.append(item + "xxx" + random.choice(keep_smiles))
                 cross_smi_explr = self.crossover_smi_list(smiles_join)
-                cross_smi_explr = self.check_filters(cross_smi_explr)
+                cross_smi_explr = self.check_filters(cross_smi_explr, self.prop_path, self.prop_scaler_path, gen_)
 
                 # Combine and get unique smiles not yet found
                 all_smiles = list(set(mut_smi_explr + cross_smi_explr))
@@ -293,8 +293,12 @@ class JANUS:
             for smi in self.population:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
-                    p = make_preds(smi,self.prop_path,self.prop_scaler_path,gen_+1)
-                    self.props_storage[smi] = (p[0],p[1])
+                    master_data = pd.read_csv('master.txt')
+                    tmp = master_data[master_data['smiles']==smi]
+                    p1, p2 = tmp[prop_names[0]][0],tmp[prop_names[1]][0]
+                    self.props_storage[smi] = (p1,p2)
+                    #p,s = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
+                    #self.props_storage[smi] = (p[1],p[2])
 
             self.fitness = []
             for smi in self.population:                    
@@ -355,7 +359,7 @@ class JANUS:
             while len(exploit_smiles) < self.generation_size:
                 smiles_local_search = population_sort[0 : self.top_mols].tolist()
                 mut_smi_loc = self.mutate_smi_list(smiles_local_search, "local")
-                mut_smi_loc = self.check_filters(mut_smi_loc)
+                mut_smi_loc = self.check_filters(mut_smi_loc, self.prop_path, self.prop_scaler_path, gen_)
 
                 # filter out molecules already found
                 for x in mut_smi_loc:
@@ -379,7 +383,7 @@ class JANUS:
             for smi in self.population_loc:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
-                    p = make_preds(smi,self.prop_path,self.prop_scaler_path,gen_+1)
+                    p = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
                     self.props_storage[smi] = (p[0],p[1])
 
             # Exploitation data generated from similarity search is measured with fitness function
