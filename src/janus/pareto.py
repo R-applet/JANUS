@@ -59,8 +59,8 @@ def collect_ensemble(smi: str, model_paths: str, scale_paths: str, gen: int):
     p_means = []
     p_std = []
     for j in range(len(ps_array[0])):
-        p_means.append(np.mean(ps_array[:,j])
-        p_std.append(np.std(ps_array[:,j])
+        p_means.append(np.mean(ps_array[:,j]))
+        p_std.append(np.std(ps_array[:,j]))
     
     record_data(smi, p_means, p_std, gen)
     return p_means,p_std
