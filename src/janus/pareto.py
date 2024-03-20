@@ -106,7 +106,7 @@ def find_pareto_front(costs,opt):
                     break
 
             elif opt == 'max_max':
-                if (other[0] < c[0] and other[1] < c[1]):  # other is better in both objectives
+                if (other[0] > c[0] and other[1] > c[1]):  # other is better in both objectives
                     dominated = True
                     break
 
