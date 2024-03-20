@@ -46,9 +46,24 @@ def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
         p.append(list(scale_dict.values())[i].inverse_transform(df_pred['val'][i].reshape(-1,1))[0][0])
 
     os.system('rm -r tmp')
-    record_data(smi, p, gen)
+    #record_data(smi, p, gen)
 
     return p
+
+def collect_ensemble(smi: str, model_paths: str, scale_paths: str, gen: int):
+    ps = []
+    for i in range(len(model_paths)):
+        p_i = make_pred(smi,model_paths[i],scale_paths[i],gen)
+        ps.append(p_i)
+    ps_array = np.array(ps)
+    p_means = []
+    p_std = []
+    for j in range(len(ps_array[0])):
+        p_means.append(np.mean(ps_array[:,j])
+        p_std.append(np.std(ps_array[:,j])
+    
+    record_data(smi, p_means, p_std, gen)
+    return p_means
 
 def check_new_point(new_point, pareto_front):
     dominated = False
@@ -70,15 +85,32 @@ def distance_to_pareto_front(new_point, pareto_fit):
         min_dist = -min_dist
     return np.around(min_dist, decimals=1)
 
-def find_pareto_front(costs):
+def find_pareto_front(costs,opt):
     pareto_front = []
     for i, c in enumerate(costs):
         # Check if point 'c' is dominated by any other point
         dominated = False
         for other in costs:
-            if (other[0] < c[0] and other[1] > c[1]):  # other is better in both objectives
-                dominated = True
-                break
+            if opt == 'min_max':
+                if (other[0] < c[0] and other[1] > c[1]):  # other is better in both objectives
+                    dominated = True
+                    break
+
+            elif opt == 'max_min':
+                if (other[0] > c[0] and other[1] < c[1]):  # other is better in both objectives
+                    dominated = True
+                    break
+
+            elif opt == 'min_min':
+                if (other[0] < c[0] and other[1] < c[1]):  # other is better in both objectives
+                    dominated = True
+                    break
+
+            elif opt == 'max_max':
+                if (other[0] < c[0] and other[1] < c[1]):  # other is better in both objectives
+                    dominated = True
+                    break
+
         if not dominated:
             pareto_front.append(c)
     return np.array(pareto_front)
@@ -106,7 +138,108 @@ def fit_curve_to_points(points):
         pf_data.append([x_fit[i],y_fit[i]])
     return np.array(pf_data)
 
-def fit_step(points, density):
+def fit_step(points, density, opt):
+    segments = []
+    if opt == 'min_max':
+        sorted_points = np.sort(points,axis=0)
+        for i in range(len(points)):
+            if i == 0:
+                x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                y_up = np.linspace(0,sorted_points[i][1],density)
+                x_right = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
+                y_right = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+
+            else:
+                x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                y_up = np.linspace(sorted_points[i-1][1],sorted_points[i][1],density)
+                x_right = np.linspace(sorted_points[i-1][0],sorted_points[i][0],density)
+                y_right = np.linspace(sorted_points[i-1][1],sorted_points[i-1][1],density)
+
+            xy_up = np.vstack([x_up,y_up]).T
+            xy_right = np.vstack([x_right,y_right]).T
+            segments.append(xy_up)
+            segments.append(xy_right)
+
+        x_right = np.linspace(sorted_points[-1][0],500,density)
+        y_right = np.linspace(sorted_points[-1][1],sorted_points[-1][1],density)
+        xy_right = np.vstack([x_right,y_right]).T
+        segments.append(xy_right) 
+
+    elif opt == 'max_min':
+        sorted_points = points[points[:, 0].argsort()[::-1]]
+        for i in range(len(points)):
+            if i == 0:
+                x_down = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                y_down = np.linspace(500,sorted_points[i][1],density)
+                x_left = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
+                y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+
+            else:
+                x_down = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                y_down = np.linspace(sorted_points[i-1][1],sorted_points[i][1],density)
+                if i == len(points)-1:
+                    x_left = np.linspace(sorted_points[i][0],-100,density)
+                    y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+                else:
+                    x_left = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
+                    y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+
+            xy_down = np.vstack([x_down,y_down]).T
+            xy_left = np.vstack([x_left,y_left]).T
+            segments.append(xy_down)
+            segments.append(xy_left)
+
+    elif opt == 'min_min':
+        sorted_points = points[points[:, 0].argsort()[::-1]]
+        for i in range(len(points)):
+            if i == 0:
+                x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                y_up = np.linspace(sorted_points[i][1],sorted_points[i+1][1],density)
+                x_left = np.linspace(500,sorted_points[i][0],density)
+                y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+
+            else:
+                x_left = np.linspace(sorted_points[i-1][0],sorted_points[i][0],density)
+                y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+                if i == len(points)-1:
+                    x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                    y_up = np.linspace(sorted_points[i][1],500,density)
+                else:
+                    x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                    y_up = np.linspace(sorted_points[i][1],sorted_points[i+1][1],density)
+
+            xy_up = np.vstack([x_up,y_up]).T
+            xy_left = np.vstack([x_left,y_left]).T
+            segments.append(xy_up)
+            segments.append(xy_left)
+
+    elif opt == 'max_max':
+        sorted_points = points[points[:, 0].argsort()[::-1]]
+        for i in range(len(points)):
+            if i == 0:
+                x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                y_up = np.linspace(0,sorted_points[i][1],density)
+                x_left = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
+                y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+
+            else:
+                x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
+                y_up = np.linspace(sorted_points[i-1][1],sorted_points[i][1],density)
+                if i == len(points)-1:
+                    x_left = np.linspace(sorted_points[i][0],-100,density)
+                    y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+                else:
+                    x_left = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
+                    y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
+
+            xy_up = np.vstack([x_up,y_up]).T
+            xy_left = np.vstack([x_left,y_left]).T
+            segments.append(xy_up)
+            segments.append(xy_left)
+
+    return np.vstack(segments)
+
+def fit_step_old(points, density):
     sorted_points = np.sort(points,axis=0)
     segments = []
     for i in range(len(points)):
@@ -134,14 +267,16 @@ def fit_step(points, density):
     segments.append(xy_right)        
     return np.vstack(segments)
 
-def record_data(smi: str, props: list, gen: int):
+def record_data(smi: str, props: list, stds: list, gen: int):
     add_line = smi
     for p in props:
         add_line+=f',{p}'
+    for s in stds:
+        add_linst+=f',{s}'
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
-        f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50),generation\n')
+        f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50),mpC_std,Tdec_std,density_exp_std,density_calc_std,hof_calc_std,log(h50)_std,log(E50)_std,generation\n')
         f.close()
 
     f = open('master.txt','a')
