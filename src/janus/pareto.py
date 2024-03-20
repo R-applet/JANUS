@@ -42,7 +42,7 @@ def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
 
     p = []
     for i in range(len(df_pred)):
-        p.append(list(scale_dict.values())[i].inverse_transform(df_pred['val'][i].reshape(-1,1))[0][0])
+        p.append(list(scale_dict.values())[i].inverse_transform(df_pred['scaled_val'][i].reshape(-1,1))[0][0])
 
     os.system('rm -r tmp')
     #record_data(smi, p, gen)
