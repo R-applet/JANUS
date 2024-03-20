@@ -271,7 +271,7 @@ def record_data(smi: str, props: list, stds: list, gen: int):
     for p in props:
         add_line+=f',{p}'
     for s in stds:
-        add_linst+=f',{s}'
+        add_line+=f',{s}'
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
