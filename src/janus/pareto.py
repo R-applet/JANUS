@@ -53,7 +53,7 @@ def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
 def collect_ensemble(smi: str, model_paths: str, scale_paths: str, gen: int):
     ps = []
     for i in range(len(model_paths)):
-        p_i = make_pred(smi,model_paths[i],scale_paths[i],gen)
+        p_i = make_preds(smi,model_paths[i],scale_paths[i],gen)
         ps.append(p_i)
     ps_array = np.array(ps)
     p_means = []
