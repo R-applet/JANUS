@@ -92,12 +92,12 @@ def check_new_point(new_point, pareto_front, opt):
 def euclidean_distance(point1, point2):
     return np.sqrt(sum((p1 - p2)**2 for p1, p2 in zip(point1, point2)))
 
-def distance_to_pareto_front(new_point, pareto_fit):
+def distance_to_pareto_front(new_point, pareto_fit, opt):
     # Calculate the distance from the new point to each point in the Pareto front
     distances = [euclidean_distance(new_point, point) for point in pareto_fit]
     min_dist = min(distances)
     # Return the minimum distance
-    if check_new_point(new_point, pareto_fit):
+    if check_new_point(new_point, pareto_fit, opt):
         min_dist = -min_dist
     return np.around(min_dist, decimals=1)
 
