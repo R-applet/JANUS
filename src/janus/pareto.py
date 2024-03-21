@@ -64,12 +64,29 @@ def collect_ensemble(smi: str, model_paths: str, scale_paths: str, gen: int):
     record_data(smi, p_means, p_std, gen)
     return p_means,p_std
 
-def check_new_point(new_point, pareto_front):
+def check_new_point(new_point, pareto_front, opt):
     dominated = False
     for point in pareto_front:
-        if (point[0] < new_point[0] and point[1] > new_point[1]):
-            dominated = True
-            break
+        if opt == 'min_max':
+            if (point[0] < new_point[0] and point[1] > new_point[1]):
+                dominated = True
+                break
+
+        elif opt == 'max_min':
+            if (other[0] > c[0] and other[1] < c[1]):  # other is better in both objectives
+                dominated = True
+                break
+
+        elif opt == 'min_min':
+            if (other[0] < c[0] and other[1] < c[1]):  # other is better in both objectives
+                dominated = True
+                break
+
+        elif opt == 'max_max':
+            if (other[0] > c[0] and other[1] > c[1]):  # other is better in both objectives
+                dominated = True
+                break
+        
     return dominated
         
 def euclidean_distance(point1, point2):
