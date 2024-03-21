@@ -294,7 +294,7 @@ class JANUS:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
                     master_data = pd.read_csv('master.txt')
-                    tmp = master_data[master_data['smiles']==smi]
+                    tmp = master_data[master_data['smiles']==smi].reset_index(drop=True)
                     p1, p2 = tmp[self.prop_names[0]][0],tmp[self.prop_names[1]][0]
                     self.props_storage[smi] = (p1,p2)
                     #p,s = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
@@ -384,7 +384,7 @@ class JANUS:
                 if smi not in self.props_storage:
                     # collect property predictions for new molecules
                     master_data = pd.read_csv('master.txt')
-                    tmp = master_data[master_data['smiles']==smi]
+                    tmp = master_data[master_data['smiles']==smi].reset_index(drop=True)
                     p1, p2 = tmp[self.prop_names[0]][0],tmp[self.prop_names[1]][0]
                     self.props_storage[smi] = (p1,p2)
                     #p = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
