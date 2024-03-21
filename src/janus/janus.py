@@ -115,7 +115,7 @@ class JANUS:
         prop_data = pd.read_csv(init_props_file)
         init_props = []
         for i in range(len(prop_data)):
-            init_props.append((prop_data[prop_names[0]][i],prop_data[prop_names[1]][i]))
+            init_props.append((prop_data[self.prop_names[0]][i],prop_data[self.prop_names[1]][i]))
         self.init_pareto  = find_pareto_front(init_props,self.optimization_problem)
         self.init_pareto_fit = fit_step(self.init_pareto, 1000, self.optimization_problem)
  
@@ -295,7 +295,7 @@ class JANUS:
                     # collect property predictions for new molecules
                     master_data = pd.read_csv('master.txt')
                     tmp = master_data[master_data['smiles']==smi]
-                    p1, p2 = tmp[prop_names[0]][0],tmp[prop_names[1]][0]
+                    p1, p2 = tmp[self.prop_names[0]][0],tmp[self.prop_names[1]][0]
                     self.props_storage[smi] = (p1,p2)
                     #p,s = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
                     #self.props_storage[smi] = (p[1],p[2])
@@ -385,7 +385,7 @@ class JANUS:
                     # collect property predictions for new molecules
                     master_data = pd.read_csv('master.txt')
                     tmp = master_data[master_data['smiles']==smi]
-                    p1, p2 = tmp[prop_names[0]][0],tmp[prop_names[1]][0]
+                    p1, p2 = tmp[self.prop_names[0]][0],tmp[self.prop_names[1]][0]
                     self.props_storage[smi] = (p1,p2)
                     #p = collect_ensemble(smi,self.prop_path,self.prop_scaler_path,gen_+1)
                     #self.props_storage[smi] = (p[0],p[1])
