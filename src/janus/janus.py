@@ -125,7 +125,7 @@ class JANUS:
 
         init_fitness = []
         for smi in init_smiles:
-            init_fitness.append(self.fitness_function(smi,self.init_pareto_fit,self.props_storage[smi]))
+            init_fitness.append(self.fitness_function(smi,self.init_pareto_fit,self.props_storage[smi],self.optimization_problem))
 
         # sort the initial population and save in class
         idx = np.argsort(init_fitness)[::-1]
@@ -304,13 +304,13 @@ class JANUS:
             for smi in self.population:                    
                 if smi in self.smiles_collector:
                     # always recalculate fitness with updated pareto front, count number of repeats
-                    f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi])
+                    f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi],self.optimization_problem)
                     self.fitness.append(f)
                     #self.fitness.append(self.smiles_collector[smi][0])
                     self.smiles_collector[smi][1] += 1
                 else:
                     # make a new calculation
-                    f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi])
+                    f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi],self.optimization_problem)
                     self.fitness.append(f)
                     self.smiles_collector[smi] = [f, 1]
 
@@ -393,7 +393,7 @@ class JANUS:
             # Exploitation data generated from similarity search is measured with fitness function
             self.fitness_loc = []
             for smi in self.population_loc:
-                f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi])
+                f = self.fitness_function(smi,new_pareto_fit,self.props_storage[smi],self.optimization_problem)
                 self.fitness_loc.append(f)
                 self.smiles_collector[smi] = [f, 1]
 
