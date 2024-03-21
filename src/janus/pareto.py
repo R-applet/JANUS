@@ -73,17 +73,17 @@ def check_new_point(new_point, pareto_front, opt):
                 break
 
         elif opt == 'max_min':
-            if (other[0] > c[0] and other[1] < c[1]):  # other is better in both objectives
+            if (point[0] > new_point[0] and point[1] < new_point[1]):  # other is better in both objectives
                 dominated = True
                 break
 
         elif opt == 'min_min':
-            if (other[0] < c[0] and other[1] < c[1]):  # other is better in both objectives
+            if (point[0] < new_point[0] and point[1] < new_point[1]):  # other is better in both objectives
                 dominated = True
                 break
 
         elif opt == 'max_max':
-            if (other[0] > c[0] and other[1] > c[1]):  # other is better in both objectives
+            if (point[0] > new_point[0] and point[1] > new_point[1]):  # other is better in both objectives
                 dominated = True
                 break
         
