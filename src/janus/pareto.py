@@ -99,7 +99,7 @@ def distance_to_pareto_front(new_point, pareto_fit, opt):
     # Return the minimum distance
     if check_new_point(new_point, pareto_fit, opt):
         min_dist = -min_dist
-    return np.around(min_dist, decimals=1)
+    return min_dist
 
 def find_pareto_front(costs,opt):
     pareto_front = []
