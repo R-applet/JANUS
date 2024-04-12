@@ -25,6 +25,7 @@ class JANUS:
         self,
         work_dir: str,
         fitness_function: Callable,
+        objective: Optional[Callable] = None,
         start_population: str,
         verbose_out: Optional[bool] = False,
         custom_filter: Optional[Callable] = None,
@@ -53,6 +54,7 @@ class JANUS:
         # set all class variables
         self.work_dir = work_dir
         self.fitness_function = fitness_function
+        self.objective = objective
         self.start_population = start_population
         self.verbose_out = verbose_out
         self.custom_filter = custom_filter
@@ -248,9 +250,17 @@ class JANUS:
 
             # Replace the molecules with ones in exploration mutation/crossover
             if not self.use_classifier or gen_ == 0:
-                replaced_pop = random.sample(
-                    explr_smiles, self.generation_size - len(keep_smiles)
-                )
+
+            #    replaced_pop = random.sample(
+            #        explr_smiles, self.generation_size - len(keep_smiles)
+            #    )
+
+                objective_vals = self.objective(explr_smiles)
+                sorted_idx = np.argsort(np.squeeze(objective_vals))[::-1]
+                replaced_pop = np.array(explr_smiles)[
+                    sorted_idx[: self.generation_size - len(keep_smiles)]
+                ].tolist()
+
             else:
                 # The sampling needs to be done by the neural network!
                 print("    Training classifier neural net...")
