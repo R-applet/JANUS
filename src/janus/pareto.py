@@ -293,6 +293,7 @@ def record_data(smi: str, props: list, stds: list, gen: int):
     if not exists:
         f = open('master.txt','a')
         f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50),mpC_std,Tdec_std,density_exp_std,density_calc_std,hof_calc_std,log(h50)_std,log(E50)_std,generation\n')
+        f.write(add_line+f',{gen}\n')
         f.close()
     else:
         master = pd.read_csv('master.txt')
