@@ -9,8 +9,8 @@ import pickle
 import os
 
 def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
-    scale_dict = pickle.load(open(scale_path,'rb'))
-    props = list(scaler_dict.keys())
+    scaler_dict = pickle.load(open(scale_path,'rb'))
+    props = list(scale_dict.keys())
     col_names = ['mpK_median_scaled','TdK_median_scaled','density_median_scaled','heat_of_formation (kcal/mol)_scaled','logE50_median_scaled']
     smiles = MolToSmiles(MolFromSmiles(smi))
     
@@ -324,7 +324,7 @@ def record_data(smi: str, props: list, stds: list, gen: int):
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
-        f.write('smiles,mpC,Tdec,density_exp,density_calc,hof_calc,log(h50),log(E50),mpC_std,Tdec_std,density_exp_std,density_calc_std,hof_calc_std,log(h50)_std,log(E50)_std,generation\n')
+        f.write('smiles,mpK,TdK,density,hof,logE50,mpK_std,TdK_std,density_std,hof_std,logE50_std,generation\n')
         f.write(add_line+f',{gen}\n')
         f.close()
     else:
