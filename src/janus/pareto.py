@@ -9,7 +9,7 @@ import pickle
 import os
 
 def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
-    scaler_dict = pickle.load(open(scale_path,'rb'))
+    scale_dict = pickle.load(open(scale_path,'rb'))
     props = list(scale_dict.keys())
     col_names = ['mpK_median_scaled','TdK_median_scaled','density_median_scaled','heat_of_formation (kcal/mol)_scaled','logE50_median_scaled']
     smiles = MolToSmiles(MolFromSmiles(smi))
