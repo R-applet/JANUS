@@ -10,6 +10,38 @@ import os
 
 def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
     scale_dict = pickle.load(open(scale_path,'rb'))
+    props = list(scaler_dict.keys())
+    col_names = ['mpK_median_scaled','TdK_median_scaled','density_median_scaled','heat_of_formation (kcal/mol)_scaled','logE50_median_scaled']
+    smiles = MolToSmiles(MolFromSmiles(smi))
+    
+    os.mkdir('./tmp')
+    
+    f_smi = open('tmp/smi_tmp.txt','w')
+    f_smi.write('smiles\n')
+    f_smi.write(f'{smiles}\n')
+    f_smi.close()
+
+    arguments = [
+        '--test_path', 'tmp/smi_tmp.txt',
+        '--preds_path', 'tmp/pred_tmp.csv',
+        '--checkpoint_dir', model_path
+    ]
+
+    args = chemprop.args.PredictArgs().parse_args(arguments)
+    preds = chemprop.train.make_predictions(args=args)
+
+    df_pred = pd.read_csv('tmp/pred_tmp.csv')
+
+    p = []
+    for i in range(len(props)):
+       p.append(scale_dict[props[i]].inverse_transform(df_pred[col_names[i]][0].reshape(-1,1))[0][0]) 
+
+    os.system('rm -r tmp')
+
+    return p
+
+def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
+    scale_dict = pickle.load(open(scale_path,'rb'))
     nprops = len(scale_dict.keys())
 
     smiles = MolToSmiles(MolFromSmiles(smi))
