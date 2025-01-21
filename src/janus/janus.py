@@ -76,7 +76,7 @@ class JANUS:
         self.top_mols = top_mols
         self.prop_path = prop_path
         self.init_props_file = init_props_file
-        self.column)_names = columns_names
+        self.column_names = columns_names
         self.prop_scaler_path = prop_scaler_path
         self.prop_names = prop_names
         self.optimization_problem = optimization_problem
