@@ -8,10 +8,9 @@ from scipy.interpolate import interp1d
 import pickle
 import os
 
-def make_preds(smi: str, model_path: str, scale_path: str, gen: int):
+def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int):
     scale_dict = pickle.load(open(scale_path,'rb'))
     props = list(scale_dict.keys())
-    col_names = ['mpK_median_scaled','TdK_median_scaled','density_median_scaled','heat_of_formation (kcal/mol)_scaled','logE50_median_scaled']
     smiles = MolToSmiles(MolFromSmiles(smi))
     
     os.mkdir('./tmp')
@@ -81,10 +80,10 @@ def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
 
     return p
 
-def collect_ensemble(smi: str, model_paths: str, scale_paths: str, gen: int):
+def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: list, gen: int):
     ps = []
     for i in range(len(model_paths)):
-        p_i = make_preds(smi,model_paths[i],scale_paths[i],gen)
+        p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen)
         ps.append(p_i)
     ps_array = np.array(ps)
     p_means = []
@@ -208,7 +207,7 @@ def fit_step(points, density, opt):
             segments.append(xy_up)
             segments.append(xy_right)
 
-        x_right = np.linspace(sorted_points[-1][0],500,density)
+        x_right = np.linspace(sorted_points[-1][0],1000,density)
         y_right = np.linspace(sorted_points[-1][1],sorted_points[-1][1],density)
         xy_right = np.vstack([x_right,y_right]).T
         segments.append(xy_right) 
@@ -218,7 +217,7 @@ def fit_step(points, density, opt):
         for i in range(len(points)):
             if i == 0:
                 x_down = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
-                y_down = np.linspace(500,sorted_points[i][1],density)
+                y_down = np.linspace(1000,sorted_points[i][1],density)
                 x_left = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
                 y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
 
@@ -243,7 +242,7 @@ def fit_step(points, density, opt):
             if i == 0:
                 x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
                 y_up = np.linspace(sorted_points[i][1],sorted_points[i+1][1],density)
-                x_left = np.linspace(500,sorted_points[i][0],density)
+                x_left = np.linspace(1000,sorted_points[i][0],density)
                 y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
 
             else:
@@ -251,7 +250,7 @@ def fit_step(points, density, opt):
                 y_left = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
                 if i == len(points)-1:
                     x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
-                    y_up = np.linspace(sorted_points[i][1],500,density)
+                    y_up = np.linspace(sorted_points[i][1],1000,density)
                 else:
                     x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
                     y_up = np.linspace(sorted_points[i][1],sorted_points[i+1][1],density)
@@ -309,13 +308,13 @@ def fit_step_old(points, density):
         segments.append(xy_up)
         segments.append(xy_right)
 
-    x_right = np.linspace(sorted_points[-1][0],500,density)
+    x_right = np.linspace(sorted_points[-1][0],1000,density)
     y_right = np.linspace(sorted_points[-1][1],sorted_points[-1][1],density)
     xy_right = np.vstack([x_right,y_right]).T
     segments.append(xy_right)        
     return np.vstack(segments)
 
-def record_data(smi: str, props: list, stds: list, gen: int):
+def record_data(smi: str, props: list, stds: list, col_names: list, gen: int):
     add_line = smi
     for p in props:
         add_line+=f',{p}'
@@ -324,7 +323,11 @@ def record_data(smi: str, props: list, stds: list, gen: int):
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
-        f.write('smiles,mpK,TdK,density,hof,logE50,mpK_std,TdK_std,density_std,hof_std,logE50_std,generation\n')
+        tmp_str = 'smiles'
+        for name in col_names:
+            tmp_str += ','+name.split('_')[0]
+        tmp_str += ',generation\n'
+        f.write(tmp_str)
         f.write(add_line+f',{gen}\n')
         f.close()
     else:
