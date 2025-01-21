@@ -92,7 +92,7 @@ def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: li
         p_means.append(np.mean(ps_array[:,j]))
         p_std.append(np.std(ps_array[:,j]))
     
-    record_data(smi, p_means, p_std, gen)
+    record_data(smi, p_means, p_std, col_names, gen)
     return p_means,p_std
 
 def check_new_point(new_point, pareto_front, opt):
