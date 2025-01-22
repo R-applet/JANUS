@@ -326,6 +326,8 @@ def record_data(smi: str, props: list, stds: list, col_names: list, gen: int):
         tmp_str = 'smiles'
         for name in col_names:
             tmp_str += ','+name.split('_')[0]
+        for name in col_names:
+            tmp_str += ','+name.split('_')[0]+'_std'
         tmp_str += ',generation\n'
         f.write(tmp_str)
         f.write(add_line+f',{gen}\n')
