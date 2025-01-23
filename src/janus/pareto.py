@@ -331,7 +331,7 @@ def record_data(smi: str, props: list, stds: list, col_names: list, extra_func, 
             tmp_str += ','+name.split('_')[0]
         for name in col_names:
             tmp_str += ','+name.split('_')[0]+'_std'
-        for ename in extra_col_name:
+        for ename in extra_col_names:
             tmp_str += ','+ename
         tmp_str += ',generation\n'
         f.write(tmp_str)
