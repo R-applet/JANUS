@@ -80,7 +80,7 @@ def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
 
     return p
 
-def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: list, gen: int):
+def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: list, extra_func, extra_col_names: list, gen: int):
     ps = []
     for i in range(len(model_paths)):
         p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen)
@@ -92,7 +92,7 @@ def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: li
         p_means.append(np.mean(ps_array[:,j]))
         p_std.append(np.std(ps_array[:,j]))
     
-    record_data(smi, p_means, p_std, col_names, gen)
+    record_data(smi, p_means, p_std, col_names, extra_func, extra_col_names, gen)
     return p_means,p_std
 
 def check_new_point(new_point, pareto_front, opt):
@@ -314,12 +314,15 @@ def fit_step_old(points, density):
     segments.append(xy_right)        
     return np.vstack(segments)
 
-def record_data(smi: str, props: list, stds: list, col_names: list, gen: int):
+def record_data(smi: str, props: list, stds: list, col_names: list, extra_func, extra_col_names: list, gen: int):
+    extra_vals = extra_func(props)
     add_line = smi
     for p in props:
         add_line+=f',{p}'
     for s in stds:
         add_line+=f',{s}'
+    for e in extra_vals:
+        add_line+=f',{e}'
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
@@ -328,6 +331,8 @@ def record_data(smi: str, props: list, stds: list, col_names: list, gen: int):
             tmp_str += ','+name.split('_')[0]
         for name in col_names:
             tmp_str += ','+name.split('_')[0]+'_std'
+        for ename in extra_col_name:
+            tmp_str += ','+ename
         tmp_str += ',generation\n'
         f.write(tmp_str)
         f.write(add_line+f',{gen}\n')
