@@ -192,7 +192,7 @@ def fit_step(points, density, opt):
         for i in range(len(points)):
             if i == 0:
                 x_up = np.linspace(sorted_points[i][0],sorted_points[i][0],density)
-                y_up = np.linspace(0,sorted_points[i][1],density)
+                y_up = np.linspace(-100,sorted_points[i][1],density)
                 x_right = np.linspace(sorted_points[i][0],sorted_points[i+1][0],density)
                 y_right = np.linspace(sorted_points[i][1],sorted_points[i][1],density)
 

@@ -189,9 +189,22 @@ class JANUS:
         cross_smi = self.flatten_list(cross_smi)
         return cross_smi
 
-    def check_filters(self, smi_list: List[str], model_paths: str, scale_paths: str, col_names: List[str], gen: int):
+    #def check_filters(self, smi_list: List[str], model_paths: str, scale_paths: str, col_names: List[str], gen: int):
+    def check_filters(self, smi_list: List[str], gen: int):
         if self.custom_filter is not None:
-            smi_list = [smi for smi in smi_list if self.custom_filter(smi, model_paths, scale_paths, col_names, gen)]
+            #smi_list = [smi for smi in smi_list if self.custom_filter(smi, model_paths, scale_paths, col_names, gen)]
+            with multiprocessing.Pool(self.num_workers) as Pool:
+                smi_list = pool.map(
+                    partial(
+                        self.custrom_filter,
+                        m_paths=self.prop_path,
+                        s_paths=self.prop_scale_path,
+                        col_names=self.col_names,
+                        gen=gen,
+                    ),
+                    smi_list,
+                )
+            smi_list = self.flatten_list(smi_list)
         return smi_list
 
     def save_hyperparameters(self):
@@ -229,14 +242,16 @@ class JANUS:
                 mut_smi_explr = self.mutate_smi_list(
                     replace_smiles[0 : len(replace_smiles) // 2], space="explore"
                 )
-                mut_smi_explr = self.check_filters(mut_smi_explr, self.prop_path, self.prop_scaler_path, self.column_names, gen_)
+                #mut_smi_explr = self.check_filters(mut_smi_explr, self.prop_path, self.prop_scaler_path, self.column_names, gen_)
+                mut_smi_explr = self.check_filters(mut_smi_explr, gen_)
 
                 # Crossovers:
                 smiles_join = []
                 for item in replace_smiles[len(replace_smiles) // 2 :]:
                     smiles_join.append(item + "xxx" + random.choice(keep_smiles))
                 cross_smi_explr = self.crossover_smi_list(smiles_join)
-                cross_smi_explr = self.check_filters(cross_smi_explr, self.prop_path, self.prop_scaler_path, self.column_names, gen_)
+                #cross_smi_explr = self.check_filters(cross_smi_explr, self.prop_path, self.prop_scaler_path, self.column_names, gen_)
+                cross_smi_explr = self.check_filters(cross_smi_explr, gen_)
 
                 # Combine and get unique smiles not yet found
                 all_smiles = list(set(mut_smi_explr + cross_smi_explr))
@@ -371,7 +386,8 @@ class JANUS:
             while len(exploit_smiles) < self.generation_size:
                 smiles_local_search = population_sort[0 : self.top_mols].tolist()
                 mut_smi_loc = self.mutate_smi_list(smiles_local_search, "local")
-                mut_smi_loc = self.check_filters(mut_smi_loc, self.prop_path, self.prop_scaler_path, self.column_names, gen_)
+                #mut_smi_loc = self.check_filters(mut_smi_loc, self.prop_path, self.prop_scaler_path, self.column_names, gen_)
+                mut_smi_loc = self.check_filters(mut_smi_loc, gen_)
 
                 # filter out molecules already found
                 for x in mut_smi_loc:
