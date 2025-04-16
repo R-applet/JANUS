@@ -11,31 +11,32 @@ import os
 def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int):
     scale_dict = pickle.load(open(scale_path,'rb'))
     props = list(scale_dict.keys())
-    smiles = MolToSmiles(MolFromSmiles(smi))
+    mol = MolFromSmiles(smi)
+    smiles = MolToSmiles(mol)
+    mol_form = CalcMolFormula(mol)
+    os.mkdir(f'./{mol_form}')
     
-    os.mkdir('./tmp')
-    
-    f_smi = open('tmp/smi_tmp.txt','w')
+    f_smi = open(f'{mol_form}/smi_tmp.txt','w')
     f_smi.write('smiles\n')
     f_smi.write(f'{smiles}\n')
     f_smi.close()
 
     arguments = [
-        '--test_path', 'tmp/smi_tmp.txt',
-        '--preds_path', 'tmp/pred_tmp.csv',
+        '--test_path', f'{mol_form}/smi_tmp.txt',
+        '--preds_path', f'{mol_form}/pred_tmp.csv',
         '--checkpoint_dir', model_path
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
     preds = chemprop.train.make_predictions(args=args)
 
-    df_pred = pd.read_csv('tmp/pred_tmp.csv')
+    df_pred = pd.read_csv(f'{mol_form}/pred_tmp.csv')
 
     p = []
     for i in range(len(props)):
        p.append(scale_dict[props[i]].inverse_transform(df_pred[col_names[i]][0].reshape(-1,1))[0][0]) 
 
-    os.system('rm -r tmp')
+    os.system(f'rm -r {mol_form}')
 
     return p
 
