@@ -193,7 +193,7 @@ class JANUS:
     def check_filters(self, smi_list: List[str], gen: int):
         if self.custom_filter is not None:
             #smi_list = [smi for smi in smi_list if self.custom_filter(smi, model_paths, scale_paths, col_names, gen)]
-            with multiprocessing.Pool(self.num_workers) as Pool:
+            with multiprocessing.Pool(self.num_workers) as pool:
                 smi_list = pool.map(
                     partial(
                         self.custrom_filter,
