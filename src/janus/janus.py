@@ -198,8 +198,8 @@ class JANUS:
                     partial(
                         self.custom_filter,
                         m_paths=self.prop_path,
-                        s_paths=self.prop_scale_path,
-                        col_names=self.col_names,
+                        s_paths=self.prop_scaler_path,
+                        col_names=self.column_names,
                         gen=gen,
                     ),
                     smi_list,
