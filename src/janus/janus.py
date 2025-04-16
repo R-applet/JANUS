@@ -196,7 +196,7 @@ class JANUS:
             with multiprocessing.Pool(self.num_workers) as pool:
                 smi_list = pool.map(
                     partial(
-                        self.custrom_filter,
+                        self.custom_filter,
                         m_paths=self.prop_path,
                         s_paths=self.prop_scale_path,
                         col_names=self.col_names,
