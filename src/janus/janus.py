@@ -21,7 +21,7 @@ class NoDaemonProcess(multiprocessing.Process):
     def _set_daemon(self, value): pass
     daemon = property(_get_daemon, _set_daemon)
 
-class NonDaemonPool(multiprocessing.Pool):
+class NonDaemonPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
 
 class JANUS:
