@@ -214,7 +214,7 @@ class JANUS:
         if self.custom_filter is not None:
             #smi_list = [smi for smi in smi_list if self.custom_filter(smi, model_paths, scale_paths, col_names, gen)]
             with NestablePool(self.num_workers) as pool:
-                smi_list = pool.map(
+                flags = pool.map(
                     partial(
                         self.custom_filter,
                         m_paths=self.prop_path,
@@ -224,7 +224,7 @@ class JANUS:
                     ),
                     smi_list,
                 )
-            smi_list = self.flatten_list(smi_list)
+            smi_list = [smi for smi, keep in zip(smi_list, flags) if keep]
         return smi_list
 
     def save_hyperparameters(self):
