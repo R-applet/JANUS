@@ -15,6 +15,15 @@ from .utils import sanitize_smiles, get_fp_scores
 from .fragment import form_fragments
 from .pareto import make_preds, collect_ensemble, check_new_point, euclidean_distance, distance_to_pareto_front, find_pareto_front, fit_curve_to_points, fit_step
 
+class NoDaemonProcess(multiprocessing.Process):
+    # force 'daemon' to always be False
+    def _get_daemon(self): return False
+    def _set_daemon(self, value): pass
+    daemon = property(_get_daemon, _set_daemon)
+
+class NonDaemonPool(multiprocessing.Pool):
+    Process = NoDaemonProcess
+
 class JANUS:
     """ JANUS class for genetic algorithm applied on SELFIES
     string representation.
@@ -193,7 +202,7 @@ class JANUS:
     def check_filters(self, smi_list: List[str], gen: int):
         if self.custom_filter is not None:
             #smi_list = [smi for smi in smi_list if self.custom_filter(smi, model_paths, scale_paths, col_names, gen)]
-            with multiprocessing.Pool(self.num_workers) as pool:
+            with NonDaemonPool(self.num_workers) as pool:
                 smi_list = pool.map(
                     partial(
                         self.custom_filter,
