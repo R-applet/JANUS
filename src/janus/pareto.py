@@ -13,30 +13,30 @@ def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen:
     props = list(scale_dict.keys())
     mol = MolFromSmiles(smi)
     smiles = MolToSmiles(mol)
-    mol_form = CalcMolFormula(mol)
-    os.mkdir(f'./{mol_form}')
+    inchikey = MolToInchiKey(mol)
+    os.mkdir(f'./{inchikey}')
     
-    f_smi = open(f'{mol_form}/smi_tmp.txt','w')
+    f_smi = open(f'{inchikey}/smi_tmp.txt','w')
     f_smi.write('smiles\n')
     f_smi.write(f'{smiles}\n')
     f_smi.close()
 
     arguments = [
-        '--test_path', f'{mol_form}/smi_tmp.txt',
-        '--preds_path', f'{mol_form}/pred_tmp.csv',
+        '--test_path', f'{inchikey}/smi_tmp.txt',
+        '--preds_path', f'{inchikey}/pred_tmp.csv',
         '--checkpoint_dir', model_path
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
     preds = chemprop.train.make_predictions(args=args)
 
-    df_pred = pd.read_csv(f'{mol_form}/pred_tmp.csv')
+    df_pred = pd.read_csv(f'{inchikey}/pred_tmp.csv')
 
     p = []
     for i in range(len(props)):
        p.append(scale_dict[props[i]].inverse_transform(df_pred[col_names[i]][0].reshape(-1,1))[0][0]) 
 
-    os.system(f'rm -r {mol_form}')
+    os.system(f'rm -r {inchikey}')
 
     return p
 
