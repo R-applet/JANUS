@@ -14,6 +14,8 @@ def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen:
     mol = MolFromSmiles(smi)
     smiles = MolToSmiles(mol)
     inchikey = MolToInchiKey(mol)
+    if os.path.exists('./{inchikey}'):
+        incikey = inchikey+'_2'
     os.mkdir(f'./{inchikey}')
     
     f_smi = open(f'{inchikey}/smi_tmp.txt','w')
