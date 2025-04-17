@@ -17,12 +17,23 @@ from .pareto import make_preds, collect_ensemble, check_new_point, euclidean_dis
 
 class NoDaemonProcess(multiprocessing.Process):
     # force 'daemon' to always be False
-    def _get_daemon(self): return False
-    def _set_daemon(self, value): pass
-    daemon = property(_get_daemon, _set_daemon)
+    @property
+    def daemon(self): 
+        return False
 
-class NonDaemonPool(multiprocessing.pool.Pool):
+    @daemon.setter
+    def daemon(self, value): 
+        # ignore any attemprs to set .daemon
+        pass
+
+class NoDaemonContext(type(multiprocessing.get_context())):
     Process = NoDaemonProcess
+
+class NestablePool(multiprocessing.pool.Pool):
+    def __init__(self, *args, **kwargs):
+        #tell Pool to use our NoDaemonContext
+        kwargs['context'] = NoDaemonContext()
+        super().__init__(*args, **kwargs)
 
 class JANUS:
     """ JANUS class for genetic algorithm applied on SELFIES
@@ -202,7 +213,7 @@ class JANUS:
     def check_filters(self, smi_list: List[str], gen: int):
         if self.custom_filter is not None:
             #smi_list = [smi for smi in smi_list if self.custom_filter(smi, model_paths, scale_paths, col_names, gen)]
-            with NonDaemonPool(self.num_workers) as pool:
+            with NestablePool(self.num_workers) as pool:
                 smi_list = pool.map(
                     partial(
                         self.custom_filter,
