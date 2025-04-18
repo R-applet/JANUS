@@ -8,13 +8,13 @@ from scipy.interpolate import interp1d
 import pickle
 import os
 
-def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int):
+def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int, model_n: int):
     scale_dict = pickle.load(open(scale_path,'rb'))
     props = list(scale_dict.keys())
     mol = MolFromSmiles(smi)
     smiles = MolToSmiles(mol)
-    inchikey = MolToInchiKey(mol)
-    if os.path.exists('./{inchikey}'):
+    inchikey = MolToInchiKey(mol)+f'_{model_n}'
+    if os.path.exists(f'./{inchikey}'):
         inchikey = inchikey+'_2'
     os.mkdir(f'./{inchikey}')
     
@@ -86,7 +86,7 @@ def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
 def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: list, extra_func, extra_col_names: list, gen: int):
     ps = []
     for i in range(len(model_paths)):
-        p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen)
+        p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen,i)
         ps.append(p_i)
     ps_array = np.array(ps)
     p_means = []
