@@ -5,10 +5,12 @@ from rdkit.Chem import *
 from rdkit import Chem, RDLogger
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
 from scipy.interpolate import interp1d
+from multiprocessing import Lock
 import pickle
 import os
 
-def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int, model_n: int):
+def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int, model_n: int, lock):
+    lock.acquire()
     scale_dict = pickle.load(open(scale_path,'rb'))
     props = list(scale_dict.keys())
     mol = MolFromSmiles(smi)
@@ -39,7 +41,7 @@ def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen:
        p.append(scale_dict[props[i]].inverse_transform(df_pred[col_names[i]][0].reshape(-1,1))[0][0]) 
 
     os.system(f'rm -r {inchikey}')
-
+    lock.release()
     return p
 
 def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
@@ -85,8 +87,9 @@ def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
 
 def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: list, extra_func, extra_col_names: list, gen: int):
     ps = []
+    mkdir_lock = Lock()
     for i in range(len(model_paths)):
-        p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen,i)
+        p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen,i,mkdir_lock)
         ps.append(p_i)
     ps_array = np.array(ps)
     p_means = []
@@ -94,8 +97,8 @@ def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: li
     for j in range(len(ps_array[0])):
         p_means.append(np.mean(ps_array[:,j]))
         p_std.append(np.std(ps_array[:,j]))
-    
-    record_data(smi, p_means, p_std, col_names, extra_func, extra_col_names, gen)
+    record_lock = Lock()
+    record_data(smi, p_means, p_std, col_names, extra_func, extra_col_names, gen, record_lock)
     return p_means,p_std
 
 def check_new_point(new_point, pareto_front, opt):
@@ -317,7 +320,7 @@ def fit_step_old(points, density):
     segments.append(xy_right)        
     return np.vstack(segments)
 
-def record_data(smi: str, props: list, stds: list, col_names: list, extra_func, extra_col_names: list, gen: int):
+def record_data(smi: str, props: list, stds: list, col_names: list, extra_func, extra_col_names: list, gen: int, lock):
     extra_vals = extra_func(props)
     add_line = smi
     for p in props:
@@ -326,6 +329,7 @@ def record_data(smi: str, props: list, stds: list, col_names: list, extra_func, 
         add_line+=f',{s}'
     for e in extra_vals:
         add_line+=f',{e}'
+    lock.acquire()
     exists = os.path.exists('master.txt')
     if not exists:
         f = open('master.txt','a')
@@ -348,3 +352,4 @@ def record_data(smi: str, props: list, stds: list, col_names: list, extra_func, 
             f = open('master.txt','a')
             f.write(add_line+f',{gen}\n')
             f.close()
+    lock.release()
