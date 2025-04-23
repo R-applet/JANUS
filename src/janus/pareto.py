@@ -8,40 +8,37 @@ from scipy.interpolate import interp1d
 from multiprocessing import Lock
 import pickle
 import os
+import uuid
 
-def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int, model_n: int, lock):
-    lock.acquire()
+def make_preds(smi: str, model_path: str, scale_path: str, col_names: list, gen: int):
+    dirname = uuid.uuid4().hex
     scale_dict = pickle.load(open(scale_path,'rb'))
     props = list(scale_dict.keys())
     mol = MolFromSmiles(smi)
     smiles = MolToSmiles(mol)
-    inchikey = MolToInchiKey(mol)+f'_{model_n}'
-    if os.path.exists(f'./{inchikey}'):
-        inchikey = inchikey+'_2'
-    os.mkdir(f'./{inchikey}')
+    os.mkdir(f'./{dirname}')
     
-    f_smi = open(f'{inchikey}/smi_tmp.txt','w')
+    f_smi = open(f'{dirname}/smi_tmp.txt','w')
     f_smi.write('smiles\n')
     f_smi.write(f'{smiles}\n')
     f_smi.close()
 
     arguments = [
-        '--test_path', f'{inchikey}/smi_tmp.txt',
-        '--preds_path', f'{inchikey}/pred_tmp.csv',
+        '--test_path', f'{dirname}/smi_tmp.txt',
+        '--preds_path', f'{dirname}/pred_tmp.csv',
         '--checkpoint_dir', model_path
     ]
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
     preds = chemprop.train.make_predictions(args=args)
 
-    df_pred = pd.read_csv(f'{inchikey}/pred_tmp.csv')
+    df_pred = pd.read_csv(f'{dirname}/pred_tmp.csv')
 
     p = []
     for i in range(len(props)):
        p.append(scale_dict[props[i]].inverse_transform(df_pred[col_names[i]][0].reshape(-1,1))[0][0]) 
 
-    os.system(f'rm -r {inchikey}')
-    lock.release()
+    os.system(f'rm -r {dirname}')
     return p
 
 def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
@@ -87,9 +84,8 @@ def make_preds_selector(smi: str, model_path: str, scale_path: str, gen: int):
 
 def collect_ensemble(smi: str, model_paths: str, scale_paths: str, col_names: list, extra_func, extra_col_names: list, gen: int):
     ps = []
-    mkdir_lock = Lock()
     for i in range(len(model_paths)):
-        p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen,i,mkdir_lock)
+        p_i = make_preds(smi,model_paths[i],scale_paths[i],col_names,gen)
         ps.append(p_i)
     ps_array = np.array(ps)
     p_means = []
