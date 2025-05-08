@@ -188,6 +188,31 @@ def fit_curve_to_points(points):
     return np.array(pf_data)
 
 def fit_step(points, density, opt):
+    points = np.asarray(points)
+    n_pts = points.shape[0]
+    if n_pts == 1:
+        x0, y0 = points[0]
+        if opt == 'min_max':
+            # vertical from y=-100 up to y0, then horizontal to x=1000
+            vert = np.column_stack([np.full(density, x0), np.linspace(-100, y0, density)])
+            horz = np.column_stack([np.linspace(x0, 1000, density), np.full(density, y0)])
+        elif opt == 'max_min':
+            # vertical from y=1000 down to y0, then horizontal to x=-100
+            vert = np.column_stack([np.full(density, x0), np.linspace(1000, y0, density)])
+            horz = np.column_stack([np.linspace(x0, -100, density), np.full(density, y0)])
+        elif opt == 'min_min':
+            # horizontal from x=1000 to x0 at y0, then vertical up to y=1000
+            horz = np.column_stack([np.linspace(1000, x0, density), np.full(density, y0)])
+            vert = np.column_stack([np.full(density, x0), np.linspace(y0, 1000, density)])
+        elif opt == 'max_max':
+            # vertical from y=0 up to y0, then horizontal to x=-100
+            vert = np.column_stack([np.full(density, x0), np.linspace(0, y0, density)])
+            horz = np.column_stack([np.linspace(x0, -100, density), np.full(density, y0)])
+        else:
+            raise ValueError(f"Unknown opt: {opt}")
+        
+        return np.vastack([vert, horz])
+
     segments = []
     if opt == 'min_max':
         sorted_points = np.sort(points,axis=0)
