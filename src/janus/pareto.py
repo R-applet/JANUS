@@ -211,7 +211,7 @@ def fit_step(points, density, opt):
         else:
             raise ValueError(f"Unknown opt: {opt}")
         
-        return np.vastack([vert, horz])
+        return np.vstack([vert, horz])
 
     segments = []
     if opt == 'min_max':
